@@ -7,25 +7,27 @@ from pptx import Presentation
 from pptx import chart
 from pptx.chart.data import ChartData
 from pptx.enum.chart import XL_CHART_TYPE
-from pptx.util import Cm #Inches
+from pptx.util import Inches#Cm
+import os
+import win32com.client
 
  
 if __name__ == '__main__':
     # 创建幻灯片 ------
     prs = Presentation('template.pptx')
     
-    title_only_slide_layout = prs.slide_layouts[0]
-    slide = prs.slides.add_slide(title_only_slide_layout)
+    subject_slide_layout = prs.slide_layouts[0]
+    slide = prs.slides.add_slide(subject_slide_layout)
     title = slide.shapes.title
-    subtitle = slide.placeholders[0]
-    title.text ="Report"
-    subtitle="Tina Chen"
+    subtitle = slide.placeholders[10]
+    title.text ='Simulation Report'
+    subtitle.text="Tina Chen"
         
     title_only_slide_layout = prs.slide_layouts[2]
     slide = prs.slides.add_slide(title_only_slide_layout)
     shapes = slide.shapes
 
-    shapes.title.text = '报告'
+    shapes.title.text = 'Simulation Report'
  
     # 定义表格数据 ------
     name_objects = ["object1", "object2", "object3"]
@@ -38,19 +40,19 @@ if __name__ == '__main__':
     # 表格样式 --------------------
     rows = 4
     cols = 4
-    top    = Cm(12.5)
-    left   = Cm(1.5) #Inches(2.0)
-    width  = Cm(24) # Inches(6.0)
-    height = Cm(6) # Inches(0.8)
+    top    = Inches(1.5)
+    left   = Inches(1) #Inches(2.0)
+    width  = Inches(2) # Inches(6.0)
+    height = Inches(0.5) # Inches(0.8)
  
     # 添加表格到幻灯片 --------------------
     table = shapes.add_table(rows, cols, left, top, width, height).table
  
     # 设置单元格宽度
-    table.columns[0].width = Cm(6)# Inches(2.0)
-    table.columns[1].width = Cm(6)
-    table.columns[2].width = Cm(6)
-    table.columns[3].width = Cm(6)
+    table.columns[0].width = Inches(2)# Inches(2.0)
+    table.columns[1].width = Inches(2)
+    table.columns[2].width = Inches(2)
+    table.columns[3].width = Inches(2)
  
     # 设置标题行
     table.cell(0, 1).text = name_objects[0]
@@ -81,7 +83,7 @@ if __name__ == '__main__':
     chart_data.add_series(name_AIs[2], val_AI3)
  
     # 添加图表到幻灯片 --------------------
-    x, y, cx, cy = Cm(3.5), Cm(4.2), Cm(24), Cm(8)
+    x, y, cx, cy = Inches(1), Inches(3.5), Inches(8), Inches(3)
     
     graphic_frame = slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, x, y, cx, cy, chart_data)
  
@@ -92,11 +94,31 @@ if __name__ == '__main__':
     chart.legend.include_in_layout = False
  
     value_axis = chart.value_axis
-    value_axis.maximum_scale = 100.0
+    value_axis.maximum_scale = 40.0
  
     value_axis.has_title = True
     value_axis.axis_title.has_text_frame = True
     value_axis.axis_title.text_frame.text = "False positive"
     value_axis.axis_title.text_frame.auto_size
  
+    slide = prs.slides.add_slide(title_only_slide_layout)
+    title = slide.shapes.title
+    title.text ='Simulation Report'
+    top = Inches(1.2)
+    left = Inches(1.5)
+    
+    width=Inches(7)
+    pic = slide.shapes.add_picture('C:/Users/Public/Pictures/Sample Pictures/Desert.jpg', left, top,width=width)
+ 
     prs.save('test_template.pptx')
+ 
+Curentpath=os.getcwd()
+ 
+ppt = win32com.client.Dispatch('PowerPoint.Application')
+pptSel = ppt.Presentations.Open(Curentpath+'/test_template.pptx',ReadOnly=1, Untitled=0, WithWindow=1)
+win32com.client.gencache.EnsureDispatch('PowerPoint.Application')
+slide_count = pptSel.Slides.Count
+print('slide page number is %d' %(slide_count))
+ppt.Quit()
+    
+    #os.system('POWERPNT.exe')
