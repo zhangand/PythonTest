@@ -108,7 +108,7 @@ if __name__ == '__main__':
     left = Inches(1.5)
     
     width=Inches(7)
-    pic = slide.shapes.add_picture('C:/Users/Public/Pictures/Sample Pictures/Desert.jpg', left, top,width=width)
+    pic = slide.shapes.add_picture('./Desert.jpg', left, top,width=width)
  
     prs.save('test_template.pptx')
  
