@@ -6,199 +6,247 @@ class AnsysDesigner:
     def __init__(self):
         self.oAnsoftApp = client.Dispatch('Ansoft.ElectronicsDesktop')
         self.oDesktop = self.oAnsoftApp.GetAppDesktop()
-        self.oDesktop.RestoreWindow()
-        self.oProject = self.oDesktop..NewProject()
-        self.oProject = self.oDesktop.SetActiveProject("Project1")
+        #self.oDesktop.RestoreWindow()
+        self.oProject = self.oDesktop.NewProject()
         self.oProject.InsertDesign("Circuit Design", "Circuit1", "", "")
         self.oDefinitionManager = self.oProject.GetDefinitionManager()
         self.oModelManager = self.oDefinitionManager.GetManager("Model")
+        self.oDesign = self.oProject.SetActiveDesign("Circuit1")
+        self.oEditor = self.oDesign.SetActiveEditor("SchematicEditor")
+        self.oComponentManager = self.oDefinitionManager.GetManager("Component")
+        self.oSimSetup = self.oDesign.GetModule("SimSetup")
+        self.oReportSetup = self.oDesign.GetModule("ReportSetup")
 
-    def set_variable(self, _var_name, _var_value):
-        _NAME = 'NAME:' + _var_name
-        _VALUE = str(_var_value) + 'mm'
-        self.oDesign.ChangeProperty(["NAME:AllTabs",
-                                     ["NAME:LocalVariableTab",
-                                      ["NAME:PropServers", "LocalVariables"],
-                                      ["NAME:NewProps",
-                                       [_NAME, "PropType:=", "VariableProp", "UserDef:=", True, "Value:=", _VALUE]]]])
-
-    def create_centered_rectangle(self, _var_x, _var_y, _var_z, _name, _dir='Z'):
-        self.oEditor.CreateRectangle(
+    def import_model(self, _file_path, _comp_name, ):
+        self.oModelManager.Add(
             [
-                "NAME:RectangleParameters",
-                "IsCovered:="	, True,
-                "XStart:="		, '-' + _var_x + '/2',
-                "YStart:="		, '-' + _var_y + '/2',
-                "ZStart:="		, _var_z,
-                "Width:="		, _var_x,
-                "Height:="		, _var_y,
-                "WhichAxis:="		, _dir
+                "NAME:"+_comp_name,
+                "Name:="	, _comp_name,
+                "ModTime:="		, 1551594058,
+                "Library:="		, "",
+                "LibLocation:="		, "Project",
+                "ModelType:="		, "nport",
+                "Description:="		, "",
+                "ImageFile:="		, "",
+                "SymbolPinConfiguration:=", 0,
+                [
+                    "NAME:PortInfoBlk"
+                ],
+                [
+                    "NAME:PortOrderBlk"
+                ],
+                "filename:="		, _file_path,     # "./VDD_GPU.s4p",
+                "numberofports:="	, 4,
+                "sssfilename:="		, "",
+                "sssmodel:="		, False,
+                "PortNames:="		, ["DUT0_DUT0_VDD_GPU_0_Group_DUT0_GND_Group" ,"DUT2_DUT2_VDD_GPU_2_Group_DUT2_GND_Group"
+                                ,"UFP_UVS64_100_8_100_UFP_UVS64_100_8_100_VDD_GPU_2_Group_UFP_UVS64_100_8_100_GND_Group"
+                                ,"UFP_UVS64_100_9_100_UFP_UVS64_100_9_100_VDD_GPU_0_Group_UFP_UVS64_100_9_100_GND_Group"],
+                "domain:="		, "frequency",
+                "datamode:="		, "Link",
+                "devicename:="		, "",
+                "SolutionName:="	, "",
+                "displayformat:="	, "MagnitudePhase",
+                "datatype:="		, "SMatrix",
+                [
+                    "NAME:DesignerCustomization",
+                    "DCOption:="		, 0,
+                    "InterpOption:="	, 0,
+                    "ExtrapOption:="	, 1,
+                    "Convolution:="		, 0,
+                    "Passivity:="		, 0,
+                    "Reciprocal:="		, False,
+                    "ModelOption:="		, "",
+                    "DataType:="		, 1
+                ],
+                [
+                    "NAME:NexximCustomization",
+                    "DCOption:="		, 3,
+                    "InterpOption:="	, 1,
+                    "ExtrapOption:="	, 3,
+                    "Convolution:="		, 0,
+                    "Passivity:="		, 0,
+                    "Reciprocal:="		, False,
+                    "ModelOption:="		, "",
+                    "DataType:="		, 2
+                ],
+                [
+                    "NAME:HSpiceCustomization",
+                    "DCOption:="		, 1,
+                    "InterpOption:="	, 2,
+                    "ExtrapOption:="	, 3,
+                    "Convolution:="		, 0,
+                    "Passivity:="		, 0,
+                    "Reciprocal:="		, False,
+                    "ModelOption:="		, "",
+                    "DataType:="		, 3
+                ],
+                "NoiseModelOption:="	, "External"
+            ])
+
+    def add_comp(self, _comp_name, ):
+        self.oComponentManager.Add(
+            [
+                "NAME:"+_comp_name,
+                "Refbase:="		, "S",
+                "NumParts:="		, 1,
+                "ModSinceLib:="		, False,
+                "CircuitEnv:="		, 0,
+                "CompExtID:="		, 5,
+                [
+                    "NAME:Parameters",
+                    "MenuProp:="		, ["CoSimulator" ,"SD" ,"" ,"Default" ,0],
+                    "ButtonProp:="		, ["CosimDefinition" ,"SD" ,"" ,"Edit" ,"Edit" ,40501,
+                    "ButtonPropClientData:=", []]
+                ],
+                [
+                    "NAME:CosimDefinitions",
+                    [
+                        "NAME:CosimDefinition",
+                        "CosimulatorType:="	, 102,
+                        "CosimDefName:="	, "Default",
+                        "IsDefinition:="	, True,
+                        "Connect:="		, True,
+                        "ModelDefinitionName:="	, _comp_name,
+                        "ShowRefPin2:="		, 2,
+                        "LenPropName:="		, ""
+                    ],
+                    "DefaultCosim:="	, "Default"
+                ]
+            ])
+
+    def create_comp(self, _comp_name,):
+        self.oEditor.CreateComponent(
+            [
+                "NAME:ComponentProps",
+                "Name:="	, _comp_name,
+                "Id:="			, "3"
             ],
             [
                 "NAME:Attributes",
-                "Name:="		, _name,
-                "Flags:="		, "",
-                "Color:="		, "(143 175 143)",
-                "Transparency:="	, 0,
-                "PartCoordinateSystem:=", "Global",
-                "UDMId:="		, "",
-                "MaterialValue:="	, "\"vacuum\"",
-                "SurfaceMaterialValue:=", "\"\"",
-                "SolveInside:="		, True,
-                "IsMaterialEditable:="	, True,
-                "UseMaterialAppearance:=", False
+                "Page:="		, 1,
+                "X:="			, 0,
+                "Y:="			, 0,
+                "Angle:="		, 0,
+                "Flip:="		, False
             ])
 
-    def connect(self, _obj1, _obj2):
-        self.oEditor.Connect(["NAME:Selections", "Selections:=", _obj1 + ',' + _obj2])
-
-    def unite(self, _obj1, _obj2):
-        self.oEditor.Unite(["NAME:Selections", "Selections:=", _obj1 + ',' + _obj2],
-                           ["NAME:UniteParameters", "KeepOriginals:=", False])
-
-    def subtract(self, _obj1, _obj2):
-        self.oEditor.Subtract(["NAME:Selections", "Blank Parts:=", _obj1, "Tool Parts:=", _obj2],
-                              ["NAME:SubtractParameters", "KeepOriginals:=", False])
-
-    def copy_and_paste(self, _obj):
-        self.oEditor.Copy(["NAME:Selections", "Selections:=", _obj])
-        self.oEditor.Paste()
-
-    def set_material(self, _obj, _mat='pec'):
-        self.oEditor.AssignMaterial(
+    def assign_port(self, *_signal_pins, **_gnd_pins):
+        self.oEditor.AddPinIPorts(
             [
                 "NAME:Selections",
-                "AllowRegionDependentPartSelectionForPMLCreation:=", True,
-                "AllowRegionSelectionForPMLCreation:=", True,
-                "Selections:="	, _obj
-            ],
+                "Selections:="		, ["CompInst@VDD_GPU;3;1"]
+            ])
+        self.oEditor.Delete(
             [
-                "NAME:Attributes",
-                "MaterialValue:="	, "\"" + _mat + "\"",
-                "SolveInside:="		, False,
-                "IsMaterialEditable:="	, True,
-                "UseMaterialAppearance:=", False
+                "NAME:Selections",
+                "Selections:="		, ["IPort@UFP_UVS64_100_8_100_UFP_UVS64_100_8_100_VDD_GPU_2_Group_UFP_UVS64_100_8_100_GND_Group;12"]
+            ])
+        self.oEditor.Delete(
+            [
+                "NAME:Selections",
+                "Selections:="	, ["IPort@UFP_UVS64_100_9_100_UFP_UVS64_100_9_100_VDD_GPU_0_Group_UFP_UVS64_100_9_100_GND_Group;16"]
+            ])
+        self.oEditor.AddPinGrounds(
+            [
+                "NAME:Selections",
+                "Selections:="		, ["CompInst@VDD_GPU;3;1"]
             ])
 
-    def assign_port(self, _obj):
-        self.oModule.AssignWavePort(["NAME:1", "Objects:=", [_obj],
-                                     "NumModes:=", 1, "RenormalizeAllTerminals:=", True,
-                                     "UseLineModeAlignment:=", False, "DoDeembed:="	, False,
-                                     ["NAME:Modes",
-                                      ["NAME:Mode1", "ModeNum:=", 1, "UseIntLine:=", False, "CharImp:=", "Zpi"]],
-                                     "ShowReporterFilter:="	, False,
-                                     "ReporterFilter:="	, [True],
-                                     "UseAnalyticAlignment:=", False])
-
-    def create_region(self, _var_ab):
-        self.oEditor.CreateRegion(
+    def insert_analysis_setup(self, *_freq):
+        self.oSimSetup.AddLinearNetworkAnalysis(
             [
-                "NAME:RegionParameters",
-                "+XPaddingType:="	, "Absolute Offset",
-                "+XPadding:="		, _var_ab,
-                "-XPaddingType:="	, "Absolute Offset",
-                "-XPadding:="		, _var_ab,
-                "+YPaddingType:="	, "Absolute Offset",
-                "+YPadding:="		, _var_ab,
-                "-YPaddingType:="	, "Absolute Offset",
-                "-YPadding:="		, _var_ab,
-                "+ZPaddingType:="	, "Absolute Offset",
-                "+ZPadding:="		, _var_ab,
-                "-ZPaddingType:="	, "Absolute Offset",
-                "-ZPadding:="		, _var_ab
-            ],
-            [
-                "NAME:Attributes",
-                "Name:="		, "Region",
-                "Flags:="		, "Wireframe#",
-                "Color:="		, "(143 175 143)",
-                "Transparency:="	, 0,
-                "PartCoordinateSystem:=", "Global",
-                "UDMId:="		, "",
-                "MaterialValue:="	, "\"vacuum\"",
-                "SurfaceMaterialValue:=", "\"\"",
-                "SolveInside:="		, True,
-                "IsMaterialEditable:="	, True,
-                "UseMaterialAppearance:=", False
+                "NAME:SimSetup",
+                "DataBlockID:="	, 16,
+                "SimSetupID:="		, 8,
+                "OptionName:="		, "(Default Options)",
+                "AdditionalOptions:="	, "",
+                "AlterBlockName:="	, "",
+                "FilterText:="		, "",
+                "AnalysisEnabled:="	, 1,
+                [
+                    "NAME:OutputQuantities"
+                ],
+                [
+                    "NAME:NoiseOutputQuantities"
+                ],
+                "Name:="		, "LinearFrequency",
+                "LinearFrequencyData:="	, [False ,0.1 ,False ,"" ,False],
+                [
+                    "NAME:SweepDefinition",
+                    "Variable:="		, "F",
+                    "Data:="		, "DEC 1kHz 1GHz 301",
+                    "OffsetF1:="		, False,
+                    "Synchronize:="		, 0
+                ]
             ])
 
-    def assign_radiation_region(self):
-        self.oModule.AssignRadiation(
-            [
-                "NAME:Rad1",
-                "Objects:="		, ["Region"],
-                "IsFssReference:="	, False,
-                "IsForPML:="		, False
-            ])
-
-    def insert_radiation_setup(self):
-        mod = self.oDesign.GetModule('RadField')
-        mod.InsertFarFieldSphereSetup(
-            [
-                "NAME:Infinite Sphere1",
-                "UseCustomRadiationSurface:=", False,
-                "ThetaStart:="		, "-180deg",
-                "ThetaStop:="		, "180deg",
-                "ThetaStep:="		, "1deg",
-                "PhiStart:="		, "0deg",
-                "PhiStop:="		, "90deg",
-                "PhiStep:="		, "90deg",
-                "UseLocalCS:="		, False
-            ])
-
-    def insert_analysis_setup(self, _freq):
-        mod = self.oDesign.GetModule('AnalysisSetup')
-        mod.InsertSetup("HfssDriven",
-        [
-            "NAME:Setup1",
-            "AdaptMultipleFreqs:="	, False,
-            "Frequency:="		, str(_freq) + 'GHz',
-            "MaxDeltaS:="		, 0.02,
-            "PortsOnly:="		, False,
-            "UseMatrixConv:="	, False,
-            "MaximumPasses:="	, 20,
-            "MinimumPasses:="	, 1,
-            "MinimumConvergedPasses:=", 1,
-            "PercentRefinement:="	, 30,
-            "IsEnabled:="		, True,
-            "BasisOrder:="		, 1,
-            "DoLambdaRefine:="	, True,
-            "DoMaterialLambda:="	, True,
-            "SetLambdaTarget:="	, False,
-            "Target:="		, 0.3333,
-            "UseMaxTetIncrease:="	, False,
-            "PortAccuracy:="	, 2,
-            "UseABCOnPort:="	, False,
-            "SetPortMinMaxTri:="	, False,
-            "UseDomains:="		, False,
-            "UseIterativeSolver:="	, False,
-            "SaveRadFieldsOnly:="	, False,
-            "SaveAnyFields:="	, True,
-            "IESolverType:="	, "Auto",
-            "LambdaTargetForIESolver:=", 0.15,
-            "UseDefaultLambdaTgtForIESolver:=", True
-        ])
+    def run_analyze(self):
+        self.oDesign.Analyze("LinearFrequency")
 
     def create_reports(self):
-        mod = self.oDesign.GetModule('ReportSetup')
-        mod.CreateReport("VSWR Plot 1", "Modal Solution Data", "Rectangular Plot", "Setup1 : LastAdaptive", [],
-                         ["Freq:=", ["All"], ],
-                         ["X Component:=", "Freq",
-                          "Y Component:=", ["VSWR(1)"]], [])
+        self.oReportSetup.CreateReport("VDD_GPU", "Standard", "Rectangular Plot", "LinearFrequency",
+                             [
+                                 "NAME:Context",
+                                 "SimValueContext:=", [3, 0, 2, 0, False, False, -1, 1, 0, 1, 1, "", 0, 0]
+                             ],
+                             [
+                                 "F:="		, ["All"]
+                             ],
+                             [
+                                 "X Component:="		, "F",
+                                 "Y Component:="		, ["mag(Z(DUT0_DUT0_VDD_GPU_0_Group_DUT0_GND_Group,DUT0_DUT0_VDD_GPU_0_Group_DUT0_GND_Group)) ","mag(Z(DUT2_DUT2_VDD_GPU_2_Group_DUT2_GND_Group,DUT2_DUT2_VDD_GPU_2_Group_DUT2_GND_Group))"]
+                             ], [])
 
-        mod.CreateReport("Realized Gain Plot 1", "Far Fields", "Rectangular Plot", "Setup1 : LastAdaptive",
-                         ["Context:=", "Infinite Sphere1"],
-                         [
-                            "Theta:="		, ["All"],
-                            "Phi:="			, ["All"],
-                            "Freq:="		, ["All"],
-                         ],
-                         [
-                            "X Component:="		, "Theta",
-                            "Y Component:="		, ["dB(RealizedGainTotal)"]
-                         ], [])
-        mod.AddTraceCharacteristics("Realized Gain Plot 1", "max", [], ["Full"])
-        mod.AddTraceCharacteristics("Realized Gain Plot 1", "xdb10Beamwidth", ["3"], ["Full"])
+    def adjust_reports(self):
+        self.oReportSetup.ChangeProperty(
+            [
+                "NAME:AllTabs",
+                [
+                    "NAME:Scaling",
+                    [
+                        "NAME:PropServers",
+                        "VDD_GPU:AxisX"
+                    ],
+                    [
+                        "NAME:ChangedProps",
+                        [
+                            "NAME:Axis Scaling",
+                            "Value:="		, "Log"
+                        ],
+                        [
+                            "NAME:Auto Units",
+                            "Value:="		, False
+                        ],
+                        [
+                            "NAME:Units",
+                            "Value:="		, "MHz"
+                        ]
+                    ]
+                ],
+                [
+                    "NAME:Scaling",
+                    [
+                        "NAME:PropServers",
+                        "VDD_GPU:AxisY1"
+                    ],
+                    [
+                        "NAME:ChangedProps",
+                        [
+                            "NAME:Axis Scaling",
+                            "Value:="		, "Log"
+                        ],
+                        [
+                            "NAME:Max",
+                            "Value:="		, "1000mOhm"
+                        ],
+                        [
+                            "NAME:Auto Units",
+                            "Value:="		, False
+                        ]
+                    ]
+                ]
+            ])
 
     def save_prj(self) -> object:
         _base_path = os.getcwd()
@@ -211,13 +259,17 @@ class AnsysDesigner:
                 break
         self.oProject.SaveAs(_path, True)
 
-    def run(self):
-        self.oDesktop.RestoreWindow()
-        self.oDesign.Analyze('Setup1')
 
 if __name__ == '__main__':
-
     h = AnsysDesigner()
-
-    # 保存一下
-    #h.save_prj()
+    currentPath=os.getcwd()+'./VDD_GPU.s4p'
+    h.import_model(currentPath, 'VDD_GPU')
+    h.add_comp('VDD_GPU')
+    h.create_comp('VDD_GPU')
+    h.oEditor.ZoomToFit()
+    h.assign_port()
+    h.insert_analysis_setup()
+    h.run_analyze()
+    h.create_reports()
+    h.adjust_reports()
+    h.save_prj()

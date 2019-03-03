@@ -1,0 +1,4 @@
+DEFINE footprint0 footprint0
+ASSIGN footprint0 libMode shared
+DEFINE footprint1 footprint1
+ASSIGN footprint1 libMode shared
