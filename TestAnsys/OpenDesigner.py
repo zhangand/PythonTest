@@ -1,5 +1,6 @@
 from win32com import client
 import os
+import fnmatch
 
 
 class AnsysDesigner:
@@ -260,9 +261,55 @@ class AnsysDesigner:
         self.oProject.SaveAs(_path, True)
 
 
+class ReadSnpFile:
+    # Read port information in SNP
+    def read_port_info(self, file_path, snp_ext_name):
+        pf=PublicFunc()
+        for full_filename in pf.find_files(file_path, snp_ext_name):
+            temp = full_filename.split('\\')
+            temp1 = temp[4].split('.')
+            filename = temp1[0]
+
+            snp_file = open(full_filename, 'r')
+
+            csv = []
+            csv1 = []
+            i = 0
+            for line in snp_file:
+                if line.find('Port[') != -1:
+                    csv.append(line)
+                    csv[i] = csv[i].rstrip()
+                    csv[i] = csv[i].rstrip('   ')
+                    csv[i] = csv[i].rstrip('  ')
+                    csv[i] = csv[i].rstrip(' ')
+                    csv[i] = csv[i].split('=')
+                    i = i + 1
+            snp_file.close()
+
+            port_name = []
+
+            for i in range(0, len(csv), 1):
+                port_name.append(csv[i][1])
+
+
+class PublicFunc:
+    def find_files(self, directory, pattern):
+        for root, dirs, files in os.walk(directory):
+            for basename in files:
+                if fnmatch.fnmatch(basename, pattern):
+                    filename = os.path.join(root, basename)
+                    yield filename
+
+
 if __name__ == '__main__':
+    #  Define static variable
+    ext_name = '*.s*p'
+    currentPath=os.getcwd()
+    #  End Define static variable
+    rf=ReadSnpFile()
+    rf.read_port_info(currentPath, ext_name)
     h = AnsysDesigner()
-    currentPath=os.getcwd()+'./VDD_GPU.s4p'
+
     h.import_model(currentPath, 'VDD_GPU')
     h.add_comp('VDD_GPU')
     h.create_comp('VDD_GPU')
