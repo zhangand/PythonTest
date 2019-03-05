@@ -1,7 +1,7 @@
 from win32com import client
 import os
+import string
 import fnmatch
-
 
 class AnsysDesigner:
     def __init__(self):
@@ -117,7 +117,7 @@ class AnsysDesigner:
             ])
 
     def create_comp(self, _comp_name,):
-        self.oEditor.CreateComponent(
+        inCompId=self.oEditor.CreateComponent(
             [
                 "NAME:ComponentProps",
                 "Name:="	, _comp_name,
@@ -131,27 +131,33 @@ class AnsysDesigner:
                 "Angle:="		, 0,
                 "Flip:="		, False
             ])
+        return inCompId
 
-    def assign_port(self, *_signal_pins, **_gnd_pins):
+    def get_comp_pininfo(self, in_comp_id):
+        comp_pins = self.oEditor.GetComponentPins(in_comp_id)
+        for pin in comp_pins :
+            comp_pin_info = self.oEditor.GetComponentPinInfo(in_comp_id, pin)
+            x_temp = str(comp_pin_info[0]).split('=')
+            x = x_temp[1]
+            y_temp = str(comp_pin_info[1]).split('=')
+            y = y_temp[1]
+            angle_temp = str(comp_pin_info[2]).split('=')
+            angle = float(angle_temp[1])
+            flip_temp = str(comp_pin_info[3]).split('=')
+            flip = flip_temp[1]
+
+    def assign_page_conn(self, in_comp_id):
+        self.oEditor.AddPinPageconnectors(
+            [
+                "NAME:Selections",
+                "Selections:="		, [in_comp_id]
+            ])
+
+    def assign_page_conn(self, in_comp_pin_list):
         self.oEditor.AddPinIPorts(
             [
                 "NAME:Selections",
-                "Selections:="		, ["CompInst@VDD_GPU;3;1"]
-            ])
-        self.oEditor.Delete(
-            [
-                "NAME:Selections",
-                "Selections:="		, ["IPort@UFP_UVS64_100_8_100_UFP_UVS64_100_8_100_VDD_GPU_2_Group_UFP_UVS64_100_8_100_GND_Group;12"]
-            ])
-        self.oEditor.Delete(
-            [
-                "NAME:Selections",
-                "Selections:="	, ["IPort@UFP_UVS64_100_9_100_UFP_UVS64_100_9_100_VDD_GPU_0_Group_UFP_UVS64_100_9_100_GND_Group;16"]
-            ])
-        self.oEditor.AddPinGrounds(
-            [
-                "NAME:Selections",
-                "Selections:="		, ["CompInst@VDD_GPU;3;1"]
+                "Selections:="		, [in_comp_pin_list]
             ])
 
     def insert_analysis_setup(self, *_freq):
@@ -304,19 +310,23 @@ class PublicFunc:
 if __name__ == '__main__':
     #  Define static variable
     ext_name = '*.s*p'
-    currentPath=os.getcwd()
+    currentPath=os.getcwd()+'VDD_GPU.s4p'
     #  End Define static variable
-    rf=ReadSnpFile()
-    rf.read_port_info(currentPath, ext_name)
+    #rf=ReadSnpFile()
+    #rf.read_port_info(currentPath, ext_name)
     h = AnsysDesigner()
 
     h.import_model(currentPath, 'VDD_GPU')
     h.add_comp('VDD_GPU')
-    h.create_comp('VDD_GPU')
+    compid = h.create_comp('VDD_GPU')
     h.oEditor.ZoomToFit()
+    h.get_comp_pininfo(compid)
+    h.assign_page_conn()
     h.assign_port()
     h.insert_analysis_setup()
+    '''
     h.run_analyze()
     h.create_reports()
     h.adjust_reports()
     h.save_prj()
+    '''
