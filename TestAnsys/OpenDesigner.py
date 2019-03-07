@@ -145,20 +145,84 @@ class AnsysDesigner:
             angle = float(angle_temp[1])
             flip_temp = str(comp_pin_info[3]).split('=')
             flip = flip_temp[1]
-
-    def assign_page_conn(self, in_comp_id):
+            
+#oEditor.AddPinPageconnectors(
+#	[
+#		"NAME:Selections",
+#		"Selections:="		, ["CompInst@vdd_gpu;1;1"]
+#	])
+    
+    def add_page_conn(self, in_comp_id):
         self.oEditor.AddPinPageconnectors(
             [
                 "NAME:Selections",
                 "Selections:="		, [in_comp_id]
             ])
 
-    def assign_page_conn(self, in_comp_pin_list):
-        self.oEditor.AddPinIPorts(
+#    oEditor.CreatePagePort(
+#        [
+#            "NAME:PagePortProps",
+#            "Name:="	, "pageport_0",
+#            "Id:="			, 20
+#        ],
+#        [
+#            "NAME:Attributes",
+#            "Page:="		, 2,
+#            "X:="			, 0.0508,
+#            "Y:="			, 0.06858,
+#            "Angle:="		, 0,
+#            "Flip:="		, False
+#        ])
+
+    def create_page_port(self, in_pageport_name, pageport_id, sch_page_num, pageport_x, pageport_y, ):
+        self.CreatePagePort(
             [
-                "NAME:Selections",
-                "Selections:="		, [in_comp_pin_list]
+                "NAME:PagePortProps",
+                "Name:="	, in_pin_name,
+                "Id:="			, pageport_id
+            ],
+            [
+                "NAME:Attributes",
+                "Page:="		, sch_page_num,
+                "X:="			, pageport_x,
+                "Y:="			, pageport_y,
+                "Angle:="		, 0,
+                "Flip:="		, False
             ])
+
+# oEditor.CreateIPort(
+#	[
+#		"NAME:IPortProps",
+#		"Name:="		, "Port1",
+#		"Id:="			, 26
+#	],
+#	[
+#		"NAME:Attributes",
+#		"Page:="		, 2,
+#		"X:="			, 0.0508,
+#		"Y:="			, 0.06858,
+#		"Angle:="		, 0,
+#		"Flip:="		, False
+#	])
+
+    def create_iport(self, i_port_name, port_id, sch_page_num, iport_x, iport_y):
+        self.oEditor.CreateIPort(
+            [
+                "NAME:IPortProps",
+                "Name:="		, i_port_name,
+                "Id:="			, port_id
+            ],
+            [
+                "NAME:Attributes",
+                "Page:="		, sch_page_num,
+                "X:="			, iport_x,
+                "Y:="			, iport_y,
+                "Angle:="		, 0,
+                "Flip:="		, False
+            ])
+
+    def create_sch_page(self, in_page_name):
+        self.oEditor.oEditor.CreatePage(in_page_name)
 
     def insert_analysis_setup(self, *_freq):
         self.oSimSetup.AddLinearNetworkAnalysis(
@@ -267,11 +331,10 @@ class AnsysDesigner:
         self.oProject.SaveAs(_path, True)
 
 
-class ReadSnpFile:
+class ReadFile:
     # Read port information in SNP
     def read_port_info(self, file_path, snp_ext_name):
-        pf=PublicFunc()
-        for full_filename in pf.find_files(file_path, snp_ext_name):
+        for full_filename in self.find_files(file_path, snp_ext_name):
             temp = full_filename.split('\\')
             temp1 = temp[4].split('.')
             filename = temp1[0]
@@ -297,15 +360,12 @@ class ReadSnpFile:
             for i in range(0, len(csv), 1):
                 port_name.append(csv[i][1])
 
-
-class PublicFunc:
     def find_files(self, directory, pattern):
         for root, dirs, files in os.walk(directory):
             for basename in files:
                 if fnmatch.fnmatch(basename, pattern):
                     filename = os.path.join(root, basename)
                     yield filename
-
 
 if __name__ == '__main__':
     #  Define static variable
