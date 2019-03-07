@@ -3,6 +3,7 @@ import os
 import string
 import fnmatch
 
+
 class AnsysDesigner:
     def __init__(self):
         self.oAnsoftApp = client.Dispatch('Ansoft.ElectronicsDesktop')
@@ -335,47 +336,46 @@ class ReadFile:
     # Read port information in SNP
     def read_port_info(self, file_path, snp_ext_name):
         for full_filename in self.find_files(file_path, snp_ext_name):
-            temp = full_filename.split('\\')
-            temp1 = temp[4].split('.')
+            temp = os.path.split(full_filename)
+            temp1 = temp[-1].split('.')
             filename = temp1[0]
 
             snp_file = open(full_filename, 'r')
 
-            csv = []
-            csv1 = []
+            flag_start_search = 0
             i = 0
             for line in snp_file:
                 if line.find('Port[') != -1:
-                    csv.append(line)
-                    csv[i] = csv[i].rstrip()
-                    csv[i] = csv[i].rstrip('   ')
-                    csv[i] = csv[i].rstrip('  ')
-                    csv[i] = csv[i].rstrip(' ')
-                    csv[i] = csv[i].split('=')
+                    temp_line = line.split('=')
+                    port_name_list[i] = temp_line[-1].rstrip()
+                    port_name_list[i] = port_name_list[i].rstrip(' ')
                     i = i + 1
+                    flag_start_search = 1
+                elif (line.find('Port[') == -1) and (flag_start_search == 1):
+                    flag_start_search = 0
+                    port_count = i
+                    break
             snp_file.close()
 
-            port_name = []
-
-            for i in range(0, len(csv), 1):
-                port_name.append(csv[i][1])
-
-    def find_files(self, directory, pattern):
-        for root, dirs, files in os.walk(directory):
-            for basename in files:
-                if fnmatch.fnmatch(basename, pattern):
-                    filename = os.path.join(root, basename)
+    def find_files(self, directory, pattern) -> object:
+        for file in os.listdir(directory):
+                if os.path.isfile(file) and fnmatch.fnmatch(file, pattern):
+                    filename = os.path.join(directory, file)
                     yield filename
+
 
 if __name__ == '__main__':
     #  Define static variable
     ext_name = '*.s*p'
-    currentPath=os.getcwd()+'VDD_GPU.s4p'
+    port_name_list = {}
+    global port_count
+    currentPath=os.getcwd()
     #  End Define static variable
-    #rf=ReadSnpFile()
-    #rf.read_port_info(currentPath, ext_name)
-    h = AnsysDesigner()
+    rf=ReadFile()
+    rf.read_port_info(currentPath, ext_name)
 
+    os.system('pause')
+    h = AnsysDesigner()
     h.import_model(currentPath, 'VDD_GPU')
     h.add_comp('VDD_GPU')
     compid = h.create_comp('VDD_GPU')
