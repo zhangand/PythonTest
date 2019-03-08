@@ -19,7 +19,7 @@ class AnsysDesigner:
         self.oSimSetup = self.oDesign.GetModule("SimSetup")
         self.oReportSetup = self.oDesign.GetModule("ReportSetup")
 
-    def import_model(self, _file_path, _comp_name, ):
+    def import_model(self, _file_path, _comp_name, _pin_list):
         self.oModelManager.Add(
             [
                 "NAME:"+_comp_name,
@@ -41,9 +41,7 @@ class AnsysDesigner:
                 "numberofports:="	, 4,
                 "sssfilename:="		, "",
                 "sssmodel:="		, False,
-                "PortNames:="		, ["DUT0_DUT0_VDD_GPU_0_Group_DUT0_GND_Group" ,"DUT2_DUT2_VDD_GPU_2_Group_DUT2_GND_Group"
-                                ,"UFP_UVS64_100_8_100_UFP_UVS64_100_8_100_VDD_GPU_2_Group_UFP_UVS64_100_8_100_GND_Group"
-                                ,"UFP_UVS64_100_9_100_UFP_UVS64_100_9_100_VDD_GPU_0_Group_UFP_UVS64_100_9_100_GND_Group"],
+                "PortNames:="		, _pin_list,
                 "domain:="		, "frequency",
                 "datamode:="		, "Link",
                 "devicename:="		, "",
@@ -117,18 +115,18 @@ class AnsysDesigner:
                 ]
             ])
 
-    def create_comp(self, _comp_name,):
+    def create_comp(self, _comp_name, _in_comp_id, _in_page_num, _comp_x, _comp_y):
         inCompId=self.oEditor.CreateComponent(
             [
                 "NAME:ComponentProps",
                 "Name:="	, _comp_name,
-                "Id:="			, "3"
+                "Id:="			, _in_comp_id
             ],
             [
                 "NAME:Attributes",
-                "Page:="		, 1,
-                "X:="			, 0,
-                "Y:="			, 0,
+                "Page:="		, _in_page_num,
+                "X:="			, _comp_x,
+                "Y:="			, _comp_y,
                 "Angle:="		, 0,
                 "Flip:="		, False
             ])
@@ -176,10 +174,10 @@ class AnsysDesigner:
 #        ])
 
     def create_page_port(self, in_pageport_name, pageport_id, sch_page_num, pageport_x, pageport_y, ):
-        self.CreatePagePort(
+        self.oEditor.CreatePagePort(
             [
                 "NAME:PagePortProps",
-                "Name:="	, in_pin_name,
+                "Name:="	, in_pageport_name,
                 "Id:="			, pageport_id
             ],
             [
@@ -335,58 +333,107 @@ class AnsysDesigner:
 class ReadFile:
     # Read port information in SNP
     def read_port_info(self, file_path, snp_ext_name):
+        global port_count
+        global comp_name_list
+        j = 0
         for full_filename in self.find_files(file_path, snp_ext_name):
+            file_list[j] = full_filename
             temp = os.path.split(full_filename)
             temp1 = temp[-1].split('.')
-            filename = temp1[0]
+            comp_name_list.append(temp1[0])
 
             snp_file = open(full_filename, 'r')
-
             flag_start_search = 0
             i = 0
             for line in snp_file:
                 if line.find('Port[') != -1:
-                    temp_line = line.split('=')
-                    port_name_list[i] = temp_line[-1].rstrip()
-                    port_name_list[i] = port_name_list[i].rstrip(' ')
+                    temp_line_list = line.split('=')
+                    temp_word = temp_line_list[-1].replace(" ", "")
+                    temp_word = temp_word.replace("\n", "")
+                    port_name_list[j].append(temp_word)
                     i = i + 1
                     flag_start_search = 1
                 elif (line.find('Port[') == -1) and (flag_start_search == 1):
                     flag_start_search = 0
-                    port_count = i
+                    port_count = port_count + i
                     break
             snp_file.close()
-
+            j = j + 1
     def find_files(self, directory, pattern) -> object:
         for file in os.listdir(directory):
                 if os.path.isfile(file) and fnmatch.fnmatch(file, pattern):
-                    filename = os.path.join(directory, file)
-                    yield filename
+                    full_filename = os.path.join(directory, file)
+                    yield full_filename
 
 
 if __name__ == '__main__':
     #  Define static variable
     ext_name = '*.s*p'
-    port_name_list = {}
-    global port_count
+
+    file_list = {}
+    comp_name_list = []
+    port_name_list = []
+    port_name_list.append([])
+    port_name_list.append([])
+
+    pageport_x = 0
+    pageport_y = 0
+
+    comp_x = 0
+    comp_y = 0
+
+    iport_x = 0
+    iport_y = 0
+
+    port_count = 0
+    comp_id = 1000
+    page_port_id = 5000
+    iport_id = 10000
+
+    page_num = 1
+
     currentPath=os.getcwd()
     #  End Define static variable
     rf=ReadFile()
     rf.read_port_info(currentPath, ext_name)
 
-    os.system('pause')
     h = AnsysDesigner()
-    h.import_model(currentPath, 'VDD_GPU')
-    h.add_comp('VDD_GPU')
-    compid = h.create_comp('VDD_GPU')
+    k = 0
+    for comp_name in comp_name_list:
+        h.import_model(file_list[k], comp_name, port_name_list[k])
+        h.add_comp(comp_name)
+        compid = h.create_comp(comp_name, comp_id, page_num, comp_x, comp_y)
+        h.add_page_conn(compid)
+        comp_y = comp_x - 0.05
+
+
+        k = k + 1
+        comp_id = comp_id + 1
+
+    page_num = page_num + 1
+    h.oEditor.CreatePage("<Page Title>")
+    m = 0
+    for comp_name in comp_name_list:
+        for port_name in port_name_list[m]:
+            if port_name.startwith(str("DUT")) :
+                h.create_page_port(port_name, page_port_id, page_num, pageport_x, pageport_y)
+                h.create_iport(port_name, iport_id, page_num, iport_x, iport_y)
+                page_port_id = page_port_id +1
+                iport_id = iport_id + 1
+                pageport_y = pageport_y - 0.05
+                iport_y = iport_y - 0.05
+            else:
+                print(port_name)
+
+
     h.oEditor.ZoomToFit()
-    h.get_comp_pininfo(compid)
-    h.assign_page_conn()
-    h.assign_port()
+
+
+    #h.get_comp_pininfo(compid)
+'''
     h.insert_analysis_setup()
-    '''
     h.run_analyze()
     h.create_reports()
     h.adjust_reports()
     h.save_prj()
-    '''
+'''
