@@ -40,7 +40,7 @@ class AnsysDesigner:
                     "NAME:PortOrderBlk"
                 ],
                 "filename:="		, _file_path,     # "./VDD_GPU.s4p",
-                "numberofports:="	, 4,
+                "numberofports:="	, len(_pin_list),
                 "sssfilename:="		, "",
                 "sssmodel:="		, False,
                 "PortNames:="		, _pin_list,
@@ -776,7 +776,7 @@ if __name__ == '__main__':
         h.oReportSetup.ExportToFile(str(comp_name) + " Z11 table", currentPath + '\\' + str(comp_name) + "_Z11_table.csv")
 
 ppt = gen_ppt()
-ppt.do_ppt()
+ppt.do_ppt(comp_name, str(currentPath) + '\\' + str(comp_name) + ".jpg",currentPath + '\\' + str(comp_name) + "_Z11_table.csv")
     #h.get_comp_pininfo(compid)
 '''
     

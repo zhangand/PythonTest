@@ -16,9 +16,9 @@ import string
 z_info = []
 
 class gen_ppt:
-    def read_csv(self, file_path, filename):
+    def read_csv(self, _file_path):
         global z_info
-        file_obj = open(str(file_path) + '/' + str(filename), 'r')
+        file_obj = open(_file_path, 'r')
         i = 0
         for line in file_obj:
             z_info.append(line)
@@ -27,7 +27,7 @@ class gen_ppt:
             i = i + 1
         file_obj.close()
 
-    def do_ppt(self,):
+    def do_ppt(self,_net_name, _pic_file_path,_csv_file_path):
         # 创建幻灯片 ------
         prs = Presentation('template.pptx')
 
@@ -42,17 +42,17 @@ class gen_ppt:
         slide = prs.slides.add_slide(title_only_slide_layout)
         shapes = slide.shapes
 
-        shapes.title.text = 'Simulation Report'
+        shapes.title.text = _net_name
 
         currentPath = os.getcwd()
-        self.read_csv(currentPath, 'VDD_GPU_Z11_table.csv')
+        self.read_csv(_csv_file_path)
 
         # 表格样式 --------------------
         rows = len(z_info)
         cols = len(z_info[0])
         width = Inches(0.8)*len(z_info[0])  # Inches(6.0)
         height = Inches(0.3)*len(z_info)  # Inches(0.8)
-        top = Inches(1)
+        top = Inches(0.3)
         left = Inches(9.3)-width  # Inches(2.0)
 
         # 添加表格到幻灯片 --------------------
@@ -84,12 +84,12 @@ class gen_ppt:
         left = Inches(0)
         width = Inches(10)
 
-        pic = slide.shapes.add_picture('./VDD_GPU.jpg', left, top, width=width)
+        pic = slide.shapes.add_picture(_pic_file_path, left, top, width=width)
 
         prs.save('test_template.pptx')
 
-        #ppt = win32com.client.Dispatch('PowerPoint.Application')
-        #pptSel = ppt.Presentations.Open(currentPath + '/test_template.pptx', ReadOnly=1, Untitled=0, WithWindow=1)
+        ppt_open = win32com.client.Dispatch('PowerPoint.Application')
+        pptSel = ppt_open.Presentations.Open(currentPath + '/test_template.pptx', ReadOnly=1, Untitled=0, WithWindow=1)
         #win32com.client.gencache.EnsureDispatch('PowerPoint.Application')
         #slide_count = pptSel.Slides.Count
         #print('slide page number is %d' % (slide_count))
