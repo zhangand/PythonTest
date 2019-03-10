@@ -1,7 +1,8 @@
-import time
+from Gen_ppt import gen_ppt
 from win32com import client
 import os
 import fnmatch
+import sys
 
 
 class AnsysDesigner:
@@ -751,7 +752,7 @@ if __name__ == '__main__':
                 iport_y = iport_y - 0.0254
             else:
                 h.create_page_port(port_name, page_port_id, page_num, pageport_x, pageport_y)
-                h.create_resistor(comp_id, page_num, pageport_x++0.0254*5, pageport_y)
+                h.create_resistor(comp_id, page_num, pageport_x+0.0254*5, pageport_y)
                 comp_id = comp_id + 1
                 h.create_gnd(comp_id, page_num, pageport_x+0.0254*5+0.00508, pageport_y-0.00254)
                 comp_id = comp_id + 1
@@ -766,13 +767,16 @@ if __name__ == '__main__':
 
         h.insert_analysis_setup()
         h.run_analyze()
-        h.create_var(comp_name, report_ports_list)
-        h.create_pdn_table(comp_name, report_ports_list, ["0.01GHz","0.05GHz","0.1GHz","0.2GHz","0.5GHz"])
-        h.oReportSetup.ExportToFile(str(comp_name) + " Z11 table", currentPath + '/' + str(comp_name) + "_Z11_table.csv")
         h.create_pdn_plot(comp_name, report_ports_list)
         h.adjust_reports(comp_name)
-        h.oReportSetup.ExportImageToFile(str(comp_name), currentPath + '/' + str(comp_name) + ".jpg", 1000, 500)
+        h.oDesktop.RestoreWindow()
+        h.oReportSetup.ExportImageToFile(str(comp_name), str(currentPath) + '\\' + str(comp_name) + ".jpg", 1000, 400)
+        h.create_var(comp_name, report_ports_list)
+        h.create_pdn_table(comp_name, report_ports_list, ["0.01GHz","0.05GHz","0.1GHz","0.2GHz","0.5GHz"])
+        h.oReportSetup.ExportToFile(str(comp_name) + " Z11 table", currentPath + '\\' + str(comp_name) + "_Z11_table.csv")
 
+ppt = gen_ppt()
+ppt.do_ppt()
     #h.get_comp_pininfo(compid)
 '''
     
