@@ -548,7 +548,11 @@ class AnsysDesigner:
                         "Value:="		, "MHz"
                     ]
                 ]
-            ],
+            ]
+        ])
+        self.oReportSetup.ChangeProperty(
+        [
+            "NAME:AllTabs",
             [
                 "NAME:Scaling",
                 [
@@ -569,12 +573,23 @@ class AnsysDesigner:
                         "NAME:Auto Units",
                         "Value:="		, False
                     ]
+                ]
+            ]
+        ])
+        self.oReportSetup.ChangeProperty(
+        [
+            "NAME:AllTabs",
+            [
+                "NAME:Scaling",
+                [
+                    "NAME:PropServers",
+                    _report_name + ":AxisY1"
                 ],
                 [
                     "NAME:ChangedProps",
                     [
                         "NAME:Max",
-                        "Value:="		, "1000mOhm"
+                        "Value:="	, "1000mOhm"
                     ],
                     [
                         "NAME:Auto Units",
@@ -711,8 +726,10 @@ if __name__ == '__main__':
         h.run_analyze()
         h.create_pdn_plot(comp_name, report_ports_list)
         h.adjust_reports(comp_name)
+        h.oReportSetup.ExportImageToFile(str(comp_name), currentPath + '/' + str(comp_name) + ".jpg", 1000, 700)
         h.create_var(comp_name, report_ports_list)
         h.create_pdn_table(comp_name, report_ports_list, ["0.01GHz","0.05GHz","0.1GHz","0.2GHz","0.5GHz"])
+        h.oReportSetup.ExportToFile(str(comp_name) + " Z11 table", currentPath + '/' + str(comp_name) + "_Z11_table.csv")
     #h.get_comp_pininfo(compid)
 '''
     
