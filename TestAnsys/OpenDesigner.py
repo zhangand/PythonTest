@@ -1,3 +1,4 @@
+import time
 from win32com import client
 import os
 import fnmatch
@@ -359,6 +360,25 @@ class AnsysDesigner:
                  "X Component:="		, "F",
                  "Y Component:="		, _ports_list
              ], [])
+        for i in range(0, len(_ports_list) , 1):
+            self.oReportSetup.ChangeProperty(
+                [
+                    "NAME:AllTabs",
+                    [
+                        "NAME:Trace",
+                        [
+                            "NAME:PropServers",
+                            _report_name+ ":"+_ports_list[i]
+                        ],
+                        [
+                            "NAME:ChangedProps",
+                            [
+                                "NAME:Name",
+                                "Value:="		, short_port_name_list[i]
+                            ]
+                        ]
+                    ]
+                ])
 
     def create_var(self,_report_name, _ports_list):
         Z_min = _ports_list[0]
@@ -485,6 +505,26 @@ class AnsysDesigner:
                     ]
                 ]
             ])
+        for i in range(0, len(z_table_port_list)-2, 1):
+            self.oReportSetup.ChangeProperty(
+                [
+                    "NAME:AllTabs",
+                    [
+                        "NAME:Trace",
+                        [
+                            "NAME:PropServers",
+                            _report_name + " Z11 table"+":"+z_table_port_list[i]
+                        ],
+                        [
+                            "NAME:ChangedProps",
+                            [
+                                "NAME:Name",
+                                "Value:="		, short_port_name_list[i]
+                            ]
+                        ]
+                    ]
+                ])
+
         self.oReportSetup.ChangeProperty(
             [
                 "NAME:AllTabs",
@@ -498,7 +538,7 @@ class AnsysDesigner:
                         "NAME:ChangedProps",
                         [
                             "NAME:Name",
-                            "Value:="	, "Avg"
+                            "Value:=", "Avg"
                         ]
                     ]
                 ]
@@ -517,7 +557,7 @@ class AnsysDesigner:
                         "NAME:ChangedProps",
                         [
                             "NAME:Name",
-                            "Value:="		, "Dev %"
+                            "Value:="	, "Dev %"
                         ]
                     ]
                 ]
@@ -657,6 +697,7 @@ if __name__ == '__main__':
     file_list = {}
     comp_name_list = []
     port_name_list = []
+    short_port_name_list = []
     report_ports_list = []
     #z_table_port_list = []
     port_name_list.append([])
@@ -703,6 +744,7 @@ if __name__ == '__main__':
                 h.create_page_port(port_name, page_port_id, page_num, pageport_x, pageport_y)
                 h.create_iport(port_name, iport_id, page_num, iport_x, iport_y)
                 report_ports_list.append('Mag(Z(' + port_name + ',' + port_name + '))')
+                short_port_name_list.append(port_name.split('_')[0])
                 page_port_id = page_port_id +1
                 iport_id = iport_id + 1
                 pageport_y = pageport_y - 0.0254
@@ -724,12 +766,13 @@ if __name__ == '__main__':
 
         h.insert_analysis_setup()
         h.run_analyze()
-        h.create_pdn_plot(comp_name, report_ports_list)
-        h.adjust_reports(comp_name)
-        h.oReportSetup.ExportImageToFile(str(comp_name), currentPath + '/' + str(comp_name) + ".jpg", 1000, 700)
         h.create_var(comp_name, report_ports_list)
         h.create_pdn_table(comp_name, report_ports_list, ["0.01GHz","0.05GHz","0.1GHz","0.2GHz","0.5GHz"])
         h.oReportSetup.ExportToFile(str(comp_name) + " Z11 table", currentPath + '/' + str(comp_name) + "_Z11_table.csv")
+        h.create_pdn_plot(comp_name, report_ports_list)
+        h.adjust_reports(comp_name)
+        h.oReportSetup.ExportImageToFile(str(comp_name), currentPath + '/' + str(comp_name) + ".jpg", 1000, 500)
+
     #h.get_comp_pininfo(compid)
 '''
     
